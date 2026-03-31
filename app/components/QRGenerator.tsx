@@ -5,6 +5,7 @@ import React, {
 } from 'react';
 import QRCode from 'qrcode';
 import QRHistory, { HistoryItem } from './QRHistory';
+import ParticleBackground from './ParticleBackground';
 
 // ── Types ────────────────────────────────────────────────────
 type QRType = 'url' | 'text' | 'email' | 'phone' | 'sms' | 'wifi' | 'vcard' | 'location' | 'event';
@@ -35,16 +36,16 @@ interface FormData {
 // ── Constants ────────────────────────────────────────────────
 const QR_TYPES: QRType[] = ['url', 'text', 'email', 'phone', 'sms', 'wifi', 'vcard', 'location', 'event'];
 
-const TYPE_META: Record<QRType, { label: string; icon: string }> = {
-  url:      { label: 'URL',      icon: '🔗' },
-  text:     { label: 'Text',     icon: '📝' },
-  email:    { label: 'Email',    icon: '✉️' },
-  phone:    { label: 'Phone',    icon: '📞' },
-  sms:      { label: 'SMS',      icon: '💬' },
-  wifi:     { label: 'Wi-Fi',    icon: '📶' },
-  vcard:    { label: 'vCard',    icon: '👤' },
-  location: { label: 'Location', icon: '📍' },
-  event:    { label: 'Event',    icon: '📅' },
+const TYPE_META: Record<QRType, { label: string; icon: React.ReactNode }> = {
+  url: { label: 'URL', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg> },
+  text: { label: 'Text', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" /></svg> },
+  email: { label: 'Email', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M22 7l-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg> },
+  phone: { label: 'Phone', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg> },
+  sms: { label: 'SMS', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg> },
+  wifi: { label: 'Wi-Fi', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0" /><path d="M1.42 9a16 16 0 0 1 21.16 0" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><line x1="12" y1="20" x2="12.01" y2="20" /></svg> },
+  vcard: { label: 'vCard', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
+  location: { label: 'Location', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg> },
+  event: { label: 'Event', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg> },
 };
 
 const DEFAULT_OPTIONS: QROptions = {
@@ -54,15 +55,15 @@ const DEFAULT_OPTIONS: QROptions = {
 };
 
 const DEFAULT_FORM: FormData = {
-  url:      { url: '' },
-  text:     { text: '' },
-  email:    { to: '', subject: '', body: '' },
-  phone:    { phone: '' },
-  sms:      { phone: '', message: '' },
-  wifi:     { ssid: '', password: '', auth: 'WPA', hidden: false },
-  vcard:    { firstName: '', lastName: '', phone: '', email: '', org: '', title: '', address: '', website: '' },
+  url: { url: '' },
+  text: { text: '' },
+  email: { to: '', subject: '', body: '' },
+  phone: { phone: '' },
+  sms: { phone: '', message: '' },
+  wifi: { ssid: '', password: '', auth: 'WPA', hidden: false },
+  vcard: { firstName: '', lastName: '', phone: '', email: '', org: '', title: '', address: '', website: '' },
   location: { lat: '', lng: '' },
-  event:    { title: '', start: '', end: '', location: '', description: '' },
+  event: { title: '', start: '', end: '', location: '', description: '' },
 };
 
 // ── Data builder ─────────────────────────────────────────────
@@ -79,7 +80,7 @@ function buildQRData(type: QRType, fd: FormData): string {
       if (!to) return '';
       const p = new URLSearchParams();
       if (subject) p.set('subject', subject);
-      if (body)    p.set('body', body);
+      if (body) p.set('body', body);
       const q = p.toString();
       return `mailto:${to}${q ? '?' + q : ''}`;
     }
@@ -100,10 +101,10 @@ function buildQRData(type: QRType, fd: FormData): string {
         'BEGIN:VCARD', 'VERSION:3.0',
         `N:${v.lastName};${v.firstName};;;`,
         `FN:${[v.firstName, v.lastName].filter(Boolean).join(' ')}`,
-        v.org     ? `ORG:${v.org}`     : '',
-        v.title   ? `TITLE:${v.title}` : '',
-        v.phone   ? `TEL:${v.phone}`   : '',
-        v.email   ? `EMAIL:${v.email}` : '',
+        v.org ? `ORG:${v.org}` : '',
+        v.title ? `TITLE:${v.title}` : '',
+        v.phone ? `TEL:${v.phone}` : '',
+        v.email ? `EMAIL:${v.email}` : '',
         v.address ? `ADR:;;${v.address};;;;` : '',
         v.website ? `URL:${v.website}` : '',
         'END:VCARD',
@@ -120,9 +121,9 @@ function buildQRData(type: QRType, fd: FormData): string {
       return [
         'BEGIN:VEVENT',
         `SUMMARY:${e.title}`,
-        e.start       ? `DTSTART:${fmt(e.start)}` : '',
-        e.end         ? `DTEND:${fmt(e.end)}`     : '',
-        e.location    ? `LOCATION:${e.location}`   : '',
+        e.start ? `DTSTART:${fmt(e.start)}` : '',
+        e.end ? `DTEND:${fmt(e.end)}` : '',
+        e.location ? `LOCATION:${e.location}` : '',
         e.description ? `DESCRIPTION:${e.description}` : '',
         'END:VEVENT',
       ].filter(Boolean).join('\n');
@@ -132,15 +133,15 @@ function buildQRData(type: QRType, fd: FormData): string {
 
 function getLabel(type: QRType, fd: FormData): string {
   switch (type) {
-    case 'url':      return fd.url.url || 'URL';
-    case 'text':     return fd.text.text.slice(0, 30) || 'Text';
-    case 'email':    return fd.email.to || 'Email';
-    case 'phone':    return fd.phone.phone || 'Phone';
-    case 'sms':      return fd.sms.phone || 'SMS';
-    case 'wifi':     return fd.wifi.ssid || 'Wi-Fi';
-    case 'vcard':    return [fd.vcard.firstName, fd.vcard.lastName].filter(Boolean).join(' ') || 'vCard';
+    case 'url': return fd.url.url || 'URL';
+    case 'text': return fd.text.text.slice(0, 30) || 'Text';
+    case 'email': return fd.email.to || 'Email';
+    case 'phone': return fd.phone.phone || 'Phone';
+    case 'sms': return fd.sms.phone || 'SMS';
+    case 'wifi': return fd.wifi.ssid || 'Wi-Fi';
+    case 'vcard': return [fd.vcard.firstName, fd.vcard.lastName].filter(Boolean).join(' ') || 'vCard';
     case 'location': return `${fd.location.lat}, ${fd.location.lng}` || 'Location';
-    case 'event':    return fd.event.title || 'Event';
+    case 'event': return fd.event.title || 'Event';
   }
 }
 
@@ -149,28 +150,28 @@ interface Toast { id: number; message: string; type: 'success' | 'error' }
 
 // ── Component ─────────────────────────────────────────────────
 export default function QRGenerator() {
-  const [theme,          setTheme]          = useState<'dark' | 'light'>('dark');
-  const [activeType,     setActiveType]     = useState<QRType>('url');
-  const [formData,       setFormData]       = useState<FormData>(DEFAULT_FORM);
-  const [options,        setOptions]        = useState<QROptions>(DEFAULT_OPTIONS);
-  const [qrData,         setQrData]         = useState('');
-  const [svgString,      setSvgString]      = useState('');
-  const [generating,     setGenerating]     = useState(false);
-  const [toasts,         setToasts]         = useState<Toast[]>([]);
-  const [history,        setHistory]        = useState<HistoryItem[]>([]);
-  const [showHistory,    setShowHistory]    = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [activeType, setActiveType] = useState<QRType>('url');
+  const [formData, setFormData] = useState<FormData>(DEFAULT_FORM);
+  const [options, setOptions] = useState<QROptions>(DEFAULT_OPTIONS);
+  const [qrData, setQrData] = useState('');
+  const [svgString, setSvgString] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
 
-  const canvasRef   = useRef<HTMLCanvasElement>(null);
-  const logoRef     = useRef<HTMLInputElement>(null);
-  const toastId     = useRef(0);
-  const fgRef       = useRef<HTMLInputElement>(null);
-  const bgRef       = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const logoRef = useRef<HTMLInputElement>(null);
+  const toastId = useRef(0);
+  const fgRef = useRef<HTMLInputElement>(null);
+  const bgRef = useRef<HTMLInputElement>(null);
 
   // Persist theme & history
   useEffect(() => {
-    const t  = localStorage.getItem('qr-theme') as 'dark' | 'light' | null;
-    const h  = localStorage.getItem('qr-history');
+    const t = localStorage.getItem('qr-theme') as 'dark' | 'light' | null;
+    const h = localStorage.getItem('qr-history');
     if (t) setTheme(t);
     if (h) { try { setHistory(JSON.parse(h)); } catch { /* ignore */ } }
   }, []);
@@ -201,9 +202,9 @@ export default function QRGenerator() {
           const img = new Image();
           img.onload = () => {
             const ls = (options.size * options.logoSize) / 100;
-            const x  = (options.size - ls) / 2;
-            const y  = (options.size - ls) / 2;
-            const p  = ls * 0.15;
+            const x = (options.size - ls) / 2;
+            const y = (options.size - ls) / 2;
+            const p = ls * 0.15;
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.roundRect(x - p, y - p, ls + p * 2, ls + p * 2, 8);
@@ -272,8 +273,8 @@ export default function QRGenerator() {
   const downloadSVG = () => {
     if (!svgString || !qrData) return;
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
     a.download = `qr-${activeType}-${Date.now()}.svg`;
     a.href = url; a.click();
     URL.revokeObjectURL(url);
@@ -521,29 +522,35 @@ export default function QRGenerator() {
         return (<>
           <div className="form-group">
             <label className="form-label" htmlFor="ev-title">Event Title</label>
-            <input id="ev-title" className="form-input" type="text" placeholder="Team Meeting"
+            <input id="ev-title" className="form-input" type="text" placeholder="Creative Workshop / Team Meeting"
               value={formData.event.title} onChange={e => patch('event', { title: e.target.value })} />
           </div>
-          <div className="form-row">
+          <div className="event-date-grid">
             <div className="form-group">
-              <label className="form-label" htmlFor="ev-start">Start</label>
+              <label className="form-label date-start" htmlFor="ev-start">
+                <span className="dot"></span> Start Date & Time
+              </label>
               <input id="ev-start" className="form-input" type="datetime-local"
                 value={formData.event.start} onChange={e => patch('event', { start: e.target.value })} />
             </div>
             <div className="form-group">
-              <label className="form-label" htmlFor="ev-end">End</label>
+              <label className="form-label date-end" htmlFor="ev-end">
+                <span className="dot"></span> End Date & Time
+              </label>
               <input id="ev-end" className="form-input" type="datetime-local"
                 value={formData.event.end} onChange={e => patch('event', { end: e.target.value })} />
             </div>
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="ev-loc">Location</label>
-            <input id="ev-loc" className="form-input" type="text" placeholder="Conference Room / Online"
-              value={formData.event.location} onChange={e => patch('event', { location: e.target.value })} />
+            <div className="input-with-icon">
+              <input id="ev-loc" className="form-input" type="text" placeholder="Conference Room / Online"
+                value={formData.event.location} onChange={e => patch('event', { location: e.target.value })} />
+            </div>
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="ev-desc">Description</label>
-            <textarea id="ev-desc" className="form-textarea" placeholder="Event details…" rows={3}
+            <textarea id="ev-desc" className="form-textarea" placeholder="What is the event about?..." rows={3}
               value={formData.event.description} onChange={e => patch('event', { description: e.target.value })} />
           </div>
         </>);
@@ -553,22 +560,23 @@ export default function QRGenerator() {
   // ── JSX ───────────────────────────────────────────────────
   return (
     <div className="qr-app">
+      <ParticleBackground />
       {/* ── Header ── */}
-      <header className="qr-header">
+      <header className="qr-header" style={{ position: 'sticky', zIndex: 100 }}>
         <div className="qr-header-inner">
           <div className="qr-logo-wrap">
             <div className="qr-logo-icon">
               <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
-                <rect x="2" y="2" width="10" height="10" rx="2.5" fill="currentColor" opacity="0.95"/>
-                <rect x="4.5" y="4.5" width="5" height="5" rx="1" fill="rgba(0,0,0,0.25)"/>
-                <rect x="16" y="2" width="10" height="10" rx="2.5" fill="currentColor" opacity="0.95"/>
-                <rect x="18.5" y="4.5" width="5" height="5" rx="1" fill="rgba(0,0,0,0.25)"/>
-                <rect x="2" y="16" width="10" height="10" rx="2.5" fill="currentColor" opacity="0.95"/>
-                <rect x="4.5" y="18.5" width="5" height="5" rx="1" fill="rgba(0,0,0,0.25)"/>
-                <rect x="16" y="16" width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                <rect x="22" y="16" width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                <rect x="16" y="22" width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                <rect x="22" y="22" width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
+                <rect x="2" y="2" width="10" height="10" rx="2.5" fill="currentColor" opacity="0.95" />
+                <rect x="4.5" y="4.5" width="5" height="5" rx="1" fill="rgba(0,0,0,0.25)" />
+                <rect x="16" y="2" width="10" height="10" rx="2.5" fill="currentColor" opacity="0.95" />
+                <rect x="18.5" y="4.5" width="5" height="5" rx="1" fill="rgba(0,0,0,0.25)" />
+                <rect x="2" y="16" width="10" height="10" rx="2.5" fill="currentColor" opacity="0.95" />
+                <rect x="4.5" y="18.5" width="5" height="5" rx="1" fill="rgba(0,0,0,0.25)" />
+                <rect x="16" y="16" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                <rect x="22" y="16" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                <rect x="16" y="22" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                <rect x="22" y="22" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
               </svg>
             </div>
             <div>
@@ -579,14 +587,14 @@ export default function QRGenerator() {
           <div className="qr-header-actions">
             <button id="history-toggle-btn" className="icon-btn" onClick={() => setShowHistory(s => !s)} title="History" aria-label="Toggle history">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
               </svg>
               {history.length > 0 && <span className="badge">{history.length}</span>}
             </button>
             <button id="theme-toggle-btn" className="icon-btn" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} title="Toggle theme" aria-label="Toggle theme">
               {theme === 'dark'
-                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
-                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4" /><line x1="12" y1="2" x2="12" y2="6" /><line x1="12" y1="18" x2="12" y2="22" /><line x1="4.93" y1="4.93" x2="7.76" y2="7.76" /><line x1="16.24" y1="16.24" x2="19.07" y2="19.07" /><line x1="2" y1="12" x2="6" y2="12" /><line x1="18" y1="12" x2="22" y2="12" /><line x1="4.93" y1="19.07" x2="7.76" y2="16.24" /><line x1="16.24" y1="7.76" x2="19.07" y2="4.93" /></svg>
+                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
               }
             </button>
           </div>
@@ -594,7 +602,7 @@ export default function QRGenerator() {
       </header>
 
       {/* ── Main Grid ── */}
-      <main className="qr-main">
+      <main className="qr-main" style={{ position: 'relative', zIndex: 1 }}>
         {/* ─ Left Panel ─ */}
         <div className="qr-panel qr-panel-left">
 
@@ -638,10 +646,6 @@ export default function QRGenerator() {
           {/* Save Button */}
           <div className="panel-section animate-in">
             <button id="save-history-btn" className="generate-btn" onClick={saveToHistory} disabled={!hasQR}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-              </svg>
               Save to History
             </button>
           </div>
@@ -658,15 +662,15 @@ export default function QRGenerator() {
                 {!hasQR && (
                   <div className="qr-placeholder">
                     <svg width="72" height="72" viewBox="0 0 64 64" fill="none" opacity="0.35">
-                      <rect x="4" y="4" width="24" height="24" rx="4" stroke="currentColor" strokeWidth="2.5"/>
-                      <rect x="36" y="4" width="24" height="24" rx="4" stroke="currentColor" strokeWidth="2.5"/>
-                      <rect x="4" y="36" width="24" height="24" rx="4" stroke="currentColor" strokeWidth="2.5"/>
-                      <rect x="10" y="10" width="12" height="12" rx="2" fill="currentColor"/>
-                      <rect x="42" y="10" width="12" height="12" rx="2" fill="currentColor"/>
-                      <rect x="10" y="42" width="12" height="12" rx="2" fill="currentColor"/>
-                      <line x1="36" y1="36" x2="60" y2="36" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                      <line x1="36" y1="44" x2="56" y2="44" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                      <line x1="36" y1="52" x2="48" y2="52" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                      <rect x="4" y="4" width="24" height="24" rx="4" stroke="currentColor" strokeWidth="2.5" />
+                      <rect x="36" y="4" width="24" height="24" rx="4" stroke="currentColor" strokeWidth="2.5" />
+                      <rect x="4" y="36" width="24" height="24" rx="4" stroke="currentColor" strokeWidth="2.5" />
+                      <rect x="10" y="10" width="12" height="12" rx="2" fill="currentColor" />
+                      <rect x="42" y="10" width="12" height="12" rx="2" fill="currentColor" />
+                      <rect x="10" y="42" width="12" height="12" rx="2" fill="currentColor" />
+                      <line x1="36" y1="36" x2="60" y2="36" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                      <line x1="36" y1="44" x2="56" y2="44" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                      <line x1="36" y1="52" x2="48" y2="52" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
                     </svg>
                     <p>Fill in the form to generate your QR code</p>
                   </div>
@@ -687,23 +691,23 @@ export default function QRGenerator() {
               <p className="section-label">EXPORT</p>
               <div className="qr-actions">
                 <button id="dl-png-btn" className="qr-action-btn primary" onClick={downloadPNG}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                   PNG
                 </button>
                 <button id="dl-svg-btn" className="qr-action-btn" onClick={downloadSVG}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                   SVG
                 </button>
                 <button id="copy-btn" className="qr-action-btn" onClick={copyClipboard}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
                   Copy
                 </button>
                 <button id="share-btn" className="qr-action-btn" onClick={shareQR}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
                   Share
                 </button>
                 <button id="print-btn" className="qr-action-btn" onClick={printQR} style={{ gridColumn: 'span 2' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
                   Print QR Code
                 </button>
               </div>
@@ -719,7 +723,7 @@ export default function QRGenerator() {
             >
               <span>CUSTOMIZATION</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polyline points="6 9 12 15 18 9"/>
+                <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
 
@@ -800,8 +804,8 @@ export default function QRGenerator() {
                     <div className="logo-upload-area" onClick={() => logoRef.current?.click()} role="button" tabIndex={0}
                       onKeyDown={e => e.key === 'Enter' && logoRef.current?.click()}>
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.5">
-                        <rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
+                        <rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
                       </svg>
                       <p>Click to upload logo (PNG, JPG, SVG)</p>
                     </div>
@@ -842,7 +846,7 @@ export default function QRGenerator() {
 
       {/* ── Footer ── */}
       <footer className="qr-footer">
-        QR Studio — Built with ❤️ · Generate, customize & export QR codes instantly
+        QR Studio — Built with ❤️ by Rashmika Perera· Generate, customize & export QR codes instantly
       </footer>
 
       {/* ── Toasts ── */}

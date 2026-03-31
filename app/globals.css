@@ -2,11 +2,11 @@
 
 /* ===== DESIGN TOKENS ===== */
 :root {
-  --bg: #0A0C1E;
-  --bg-alt: #0E1028;
-  --surface: #13152B;
-  --surface2: #1A1D38;
-  --surface3: #222645;
+  --bg: #020206;
+  --bg-alt: #05050F;
+  --surface: #0A0B17;
+  --surface2: #0F1020;
+  --surface3: #151728;
   --border: rgba(108,99,255,0.13);
   --border-bright: rgba(108,99,255,0.38);
   --text: #EEF0FF;
@@ -24,8 +24,8 @@
   --error: #FF4757;
   --gradient: linear-gradient(135deg,#6C63FF 0%,#4CC9F0 100%);
   --gradient-warm: linear-gradient(135deg,#FF6B6B 0%,#FFD166 100%);
-  --card-shadow: 0 8px 40px rgba(0,0,0,0.5),0 2px 8px rgba(0,0,0,0.3);
-  --inner-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  --card-shadow: 0 8px 40px rgba(0,0,0,0.8),0 2px 8px rgba(0,0,0,0.6);
+  --inner-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
   --radius: 20px;
   --radius-sm: 12px;
   --radius-xs: 8px;
@@ -59,6 +59,7 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   transition: background var(--transition-slow), color var(--transition);
+  overflow-x: hidden;
 }
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -70,7 +71,7 @@ body {
 /* ===== HEADER ===== */
 .qr-header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(10,12,30,0.85);
+  background: rgba(2,2,6,0.88);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
   transition: background var(--transition-slow);
