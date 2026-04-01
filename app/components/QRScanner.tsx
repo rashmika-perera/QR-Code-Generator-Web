@@ -130,6 +130,19 @@ export default function QRScanner({ onClose }: QRScannerProps) {
     }
   }, [scanning]);
 
+  // Lock body scroll when scanner is open
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.classList.add('scanner-open');
+    document.body.style.top = `-${scrollY}px`;
+
+    return () => {
+      document.body.classList.remove('scanner-open');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -315,7 +328,13 @@ export default function QRScanner({ onClose }: QRScannerProps) {
 
   // ── Render ──────────────────────────────────────────────────
   return (
-    <div className="scanner-overlay">
+    <div className="scanner-overlay" onTouchMove={e => {
+      // Allow scrolling inside scanner-body, block scrolling on the overlay itself
+      const target = e.target as HTMLElement;
+      if (!target.closest('.scanner-body') && !target.closest('.scanner-history-list')) {
+        e.preventDefault();
+      }
+    }}>
       <div className="scanner-modal">
         {/* Header */}
         <div className="scanner-header">
