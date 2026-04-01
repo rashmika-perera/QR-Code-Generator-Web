@@ -5,6 +5,7 @@ import React, {
 } from 'react';
 import QRCode from 'qrcode';
 import QRHistory, { HistoryItem } from './QRHistory';
+import QRScanner from './QRScanner';
 import ParticleBackground from './ParticleBackground';
 
 // ── Types ────────────────────────────────────────────────────
@@ -174,6 +175,7 @@ export default function QRGenerator() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
@@ -646,6 +648,13 @@ export default function QRGenerator() {
             </div>
           </div>
           <div className="qr-header-actions">
+            <button id="scanner-toggle-btn" className="icon-btn" onClick={() => setShowScanner(true)} title="Scan QR Code" aria-label="Open QR Scanner">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 7V4h3" /><path d="M20 7V4h-3" />
+                <path d="M4 17v3h3" /><path d="M20 17v3h-3" />
+                <line x1="4" y1="12" x2="20" y2="12" opacity="0.5" />
+              </svg>
+            </button>
             <button id="history-toggle-btn" className="icon-btn" onClick={() => setShowHistory(s => !s)} title="History" aria-label="Toggle history">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
@@ -909,6 +918,12 @@ export default function QRGenerator() {
       <footer className="qr-footer">
         QR Studio — Built with ❤️ by Rashmika Perera· Generate, customize & export QR codes instantly
       </footer>
+
+      {/* ── Toasts ── */}
+      {/* ── QR Scanner Modal ── */}
+      {showScanner && (
+        <QRScanner onClose={() => setShowScanner(false)} />
+      )}
 
       {/* ── Toasts ── */}
       <div className="toast-container" aria-live="polite">
