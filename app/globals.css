@@ -1158,4 +1158,11 @@ input[type="color"] {
     padding: 10px 14px;
     max-width: 250px;
   }
+
+  /* Prevent iOS Safari auto-zoom on input focus */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 16px;
+  }
 }
