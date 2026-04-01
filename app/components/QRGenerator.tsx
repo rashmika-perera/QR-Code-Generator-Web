@@ -22,7 +22,7 @@ interface QROptions {
 }
 
 interface FormData {
-  url: { url: string };
+  url: { url: string; useUtm?: boolean; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmTerm?: string; utmContent?: string };
   text: { text: string };
   email: { to: string; subject: string; body: string };
   phone: { phone: string };
@@ -55,7 +55,7 @@ const DEFAULT_OPTIONS: QROptions = {
 };
 
 const DEFAULT_FORM: FormData = {
-  url: { url: '' },
+  url: { url: '', useUtm: false, utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '' },
   text: { text: '' },
   email: { to: '', subject: '', body: '' },
   phone: { phone: '' },
@@ -70,9 +70,22 @@ const DEFAULT_FORM: FormData = {
 function buildQRData(type: QRType, fd: FormData): string {
   switch (type) {
     case 'url': {
-      const u = fd.url.url.trim();
+      let u = fd.url.url.trim();
       if (!u) return '';
-      return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+      u = /^https?:\/\//i.test(u) ? u : `https://${u}`;
+      
+      if (fd.url.useUtm) {
+        try {
+          const urlObj = new URL(u);
+          if (fd.url.utmSource) urlObj.searchParams.set('utm_source', fd.url.utmSource);
+          if (fd.url.utmMedium) urlObj.searchParams.set('utm_medium', fd.url.utmMedium);
+          if (fd.url.utmCampaign) urlObj.searchParams.set('utm_campaign', fd.url.utmCampaign);
+          if (fd.url.utmTerm) urlObj.searchParams.set('utm_term', fd.url.utmTerm);
+          if (fd.url.utmContent) urlObj.searchParams.set('utm_content', fd.url.utmContent);
+          u = urlObj.toString();
+        } catch(e) { /* ignore invalid URL while typing */ }
+      }
+      return u;
     }
     case 'text': return fd.text.text;
     case 'email': {
@@ -362,11 +375,59 @@ export default function QRGenerator() {
     switch (activeType) {
       case 'url':
         return (
-          <div className="form-group">
-            <label className="form-label" htmlFor="input-url">Website URL</label>
-            <input id="input-url" className="form-input" type="url" placeholder="https://example.com"
-              value={formData.url.url} onChange={e => patch('url', { url: e.target.value })} />
-            <span className="form-hint">Enter a full URL including https://</span>
+          <div className="form-fields">
+            <div className="form-group">
+              <label className="form-label" htmlFor="input-url">Website URL</label>
+              <input id="input-url" className="form-input" type="url" placeholder="https://example.com"
+                value={formData.url.url} onChange={e => patch('url', { url: e.target.value })} />
+              <span className="form-hint">Enter a full URL including https://</span>
+            </div>
+            
+            <div className="form-group" style={{ marginTop: '8px' }}>
+              <div className="toggle-wrap">
+                <input type="checkbox" id="utm-toggle" className="toggle-input"
+                  checked={formData.url.useUtm || false}
+                  onChange={e => patch('url', { useUtm: e.target.checked })} />
+                <label htmlFor="utm-toggle" className="toggle-label">
+                  <span>Add UTM Tracking Parameters</span>
+                </label>
+              </div>
+            </div>
+            
+            {formData.url.useUtm && (
+              <div className="utm-builder-panel animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>Add campaign tracking tags to monitor analytics for this QR code.</p>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="utm-source">Campaign Source</label>
+                    <input id="utm-source" className="form-input" type="text" placeholder="e.g. google, newsletter"
+                      value={formData.url.utmSource || ''} onChange={e => patch('url', { utmSource: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="utm-medium">Campaign Medium</label>
+                    <input id="utm-medium" className="form-input" type="text" placeholder="e.g. cpc, email, print"
+                      value={formData.url.utmMedium || ''} onChange={e => patch('url', { utmMedium: e.target.value })} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="utm-campaign">Campaign Name</label>
+                  <input id="utm-campaign" className="form-input" type="text" placeholder="e.g. spring_sale"
+                    value={formData.url.utmCampaign || ''} onChange={e => patch('url', { utmCampaign: e.target.value })} />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="utm-term">Campaign Term</label>
+                    <input id="utm-term" className="form-input" type="text" placeholder="e.g. running+shoes"
+                      value={formData.url.utmTerm || ''} onChange={e => patch('url', { utmTerm: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="utm-content">Campaign Content</label>
+                    <input id="utm-content" className="form-input" type="text" placeholder="e.g. logolink"
+                      value={formData.url.utmContent || ''} onChange={e => patch('url', { utmContent: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'text':
