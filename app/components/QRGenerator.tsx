@@ -8,9 +8,10 @@ import QRHistory, { HistoryItem } from './QRHistory';
 import QRScanner from './QRScanner';
 import QRBatch from './QRBatch';
 import ParticleBackground from './ParticleBackground';
+import CryptoJS from 'crypto-js';
 
 // ── Types ────────────────────────────────────────────────────
-type QRType = 'url' | 'text' | 'email' | 'phone' | 'sms' | 'wifi' | 'vcard' | 'location' | 'event';
+type QRType = 'url' | 'text' | 'email' | 'phone' | 'sms' | 'wifi' | 'vcard' | 'location' | 'event' | 'secret';
 type ErrorLevel = 'L' | 'M' | 'Q' | 'H';
 
 interface QROptions {
@@ -33,10 +34,11 @@ interface FormData {
   vcard: { firstName: string; lastName: string; phone: string; email: string; org: string; title: string; address: string; website: string };
   location: { lat: string; lng: string };
   event: { title: string; start: string; end: string; location: string; description: string };
+  secret: { message: string; password: string };
 }
 
 // ── Constants ────────────────────────────────────────────────
-const QR_TYPES: QRType[] = ['url', 'text', 'email', 'phone', 'sms', 'wifi', 'vcard', 'location', 'event'];
+const QR_TYPES: QRType[] = ['url', 'text', 'email', 'phone', 'sms', 'wifi', 'vcard', 'location', 'event', 'secret'];
 
 const TYPE_META: Record<QRType, { label: string; icon: React.ReactNode }> = {
   url: { label: 'URL', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg> },
@@ -48,6 +50,7 @@ const TYPE_META: Record<QRType, { label: string; icon: React.ReactNode }> = {
   vcard: { label: 'vCard', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
   location: { label: 'Location', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg> },
   event: { label: 'Event', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg> },
+  secret: { label: 'Secret', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> },
 };
 
 const DEFAULT_OPTIONS: QROptions = {
@@ -66,6 +69,7 @@ const DEFAULT_FORM: FormData = {
   vcard: { firstName: '', lastName: '', phone: '', email: '', org: '', title: '', address: '', website: '' },
   location: { lat: '', lng: '' },
   event: { title: '', start: '', end: '', location: '', description: '' },
+  secret: { message: '', password: '' },
 };
 
 // ── Data builder ─────────────────────────────────────────────
@@ -143,6 +147,16 @@ function buildQRData(type: QRType, fd: FormData): string {
         'END:VEVENT',
       ].filter(Boolean).join('\n');
     }
+    case 'secret': {
+      const { message, password } = fd.secret;
+      if (!message || !password) return '';
+      try {
+        const encrypted = CryptoJS.AES.encrypt(message, password).toString();
+        return `${window.location.origin}/#secret/${encodeURIComponent(encrypted)}`;
+      } catch {
+        return '';
+      }
+    }
   }
 }
 
@@ -157,6 +171,7 @@ function getLabel(type: QRType, fd: FormData): string {
     case 'vcard': return [fd.vcard.firstName, fd.vcard.lastName].filter(Boolean).join(' ') || 'vCard';
     case 'location': return `${fd.location.lat}, ${fd.location.lng}` || 'Location';
     case 'event': return fd.event.title || 'Event';
+    case 'secret': return fd.secret.message.slice(0, 30) || 'Secret Message';
   }
 }
 
@@ -178,6 +193,37 @@ export default function QRGenerator() {
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showBatch, setShowBatch] = useState(false);
+  const [decryptData, setDecryptData] = useState<{ encrypted: string; decrypted: string | null; error: boolean } | null>(null);
+  const [decryptPassword, setDecryptPassword] = useState('');
+  const [showDecryptPassword, setShowDecryptPassword] = useState(false);
+  const [showGeneratePassword, setShowGeneratePassword] = useState(false);
+
+  const attemptDecrypt = () => {
+    if (!decryptData) return;
+    try {
+      const bytes = CryptoJS.AES.decrypt(decryptData.encrypted, decryptPassword);
+      const originalText = bytes.toString(CryptoJS.enc.Utf8);
+      if (!originalText) throw new Error('Bad password');
+      setDecryptData({ ...decryptData, decrypted: originalText, error: false });
+    } catch {
+      setDecryptData({ ...decryptData, decrypted: null, error: true });
+    }
+  };
+
+  useEffect(() => {
+    const checkHash = () => {
+      if (window.location.hash.startsWith('#secret/')) {
+        const encrypted = window.location.hash.slice(8);
+        if (encrypted) {
+           setDecryptData({ encrypted: decodeURIComponent(encrypted), decrypted: null, error: false });
+           setDecryptPassword('');
+        }
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, []);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
@@ -590,15 +636,15 @@ export default function QRGenerator() {
             <input id="ev-title" className="form-input" type="text" placeholder="Creative Workshop / Team Meeting"
               value={formData.event.title} onChange={e => patch('event', { title: e.target.value })} />
           </div>
-          <div className="event-date-grid">
-            <div className="form-group">
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px' }}>
+            <div className="form-group" style={{ minWidth: 0 }}>
               <label className="form-label date-start" htmlFor="ev-start">
                 <span className="dot"></span> Start Date & Time
               </label>
               <input id="ev-start" className="form-input" type="datetime-local"
                 value={formData.event.start} onChange={e => patch('event', { start: e.target.value })} />
             </div>
-            <div className="form-group">
+            <div className="form-group" style={{ minWidth: 0 }}>
               <label className="form-label date-end" htmlFor="ev-end">
                 <span className="dot"></span> End Date & Time
               </label>
@@ -617,6 +663,33 @@ export default function QRGenerator() {
             <label className="form-label" htmlFor="ev-desc">Description</label>
             <textarea id="ev-desc" className="form-textarea" placeholder="What is the event about?..." rows={3}
               value={formData.event.description} onChange={e => patch('event', { description: e.target.value })} />
+          </div>
+        </>);
+      case 'secret':
+        return (<>
+          <div className="form-group">
+            <label className="form-label" htmlFor="sec-msg">Secret Message</label>
+            <textarea id="sec-msg" className="form-textarea" placeholder="Type your hidden message here..." rows={4}
+              value={formData.secret.message} onChange={e => patch('secret', { message: e.target.value })} />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="sec-pass">Encryption Password</label>
+            <div style={{ position: 'relative' }}>
+              <input id="sec-pass" className="form-input" type={showGeneratePassword ? 'text' : 'password'} placeholder="Require password to open..."
+                value={formData.secret.password} onChange={e => patch('secret', { password: e.target.value })} style={{ paddingRight: '40px', width: '100%' }} />
+              <button type="button" onClick={() => setShowGeneratePassword(prev => !prev)}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                aria-label={showGeneratePassword ? "Hide password" : "Show password"}>
+                {showGeneratePassword ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                )}
+              </button>
+            </div>
+          </div>
+          <div className="form-hint-box" style={{ background: 'var(--primary-ultra)', color: 'var(--primary-light)', padding: '12px', border: '1px solid var(--primary)', borderRadius: '6px', fontSize: '0.8rem', lineHeight: '1.4' }}>
+            🔒 The message is encrypted completely offline in your browser. When scanned, it opens this app and prompts for the password to read.
           </div>
         </>);
     }
@@ -938,6 +1011,58 @@ export default function QRGenerator() {
       {/* ── QR Batch Modal ── */}
       {showBatch && (
         <QRBatch onClose={() => setShowBatch(false)} options={options} />
+      )}
+
+      {/* ── Decrypt Secret Modal ── */}
+      {decryptData && (
+        <div className="scanner-overlay">
+          <div className="scanner-modal" style={{ maxWidth: '400px' }}>
+            <div className="scanner-header" style={{ borderBottom: 'none', paddingBottom: '0' }}>
+               <h2 className="scanner-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                 Encrypted Message
+               </h2>
+               <button className="scanner-close-btn" onClick={() => { setDecryptData(null); window.location.hash = ''; }}>
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+               </button>
+            </div>
+            <div className="scanner-body">
+               {decryptData.decrypted ? (
+                 <div className="animate-in">
+                   <p style={{ fontSize: '0.85rem', color: 'var(--success)', marginBottom: '12px', fontWeight: 'bold' }}>✓ Message decrypted successfully!</p>
+                   <div style={{ background: 'var(--surface2)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.9rem', lineHeight: 1.5, wordWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
+                     {decryptData.decrypted}
+                   </div>
+                   <button className="qr-action-btn primary" style={{ width: '100%', marginTop: '20px', justifyContent: 'center' }} onClick={() => { setDecryptData(null); window.location.hash = ''; }}>Close</button>
+                 </div>
+               ) : (
+                 <div className="animate-in">
+                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>This QR code contains a secret message. Enter the password to decrypt it.</p>
+                   <div className="form-group" style={{ position: 'relative' }}>
+                     <input type={showDecryptPassword ? 'text' : 'password'} value={decryptPassword} className="form-input" placeholder="Enter password"
+                       onChange={e => setDecryptPassword(e.target.value)}
+                       onKeyDown={e => e.key === 'Enter' && attemptDecrypt()}
+                       style={{ paddingRight: '40px' }}
+                       autoFocus />
+                     <button type="button" onClick={() => setShowDecryptPassword(prev => !prev)}
+                       style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                       aria-label={showDecryptPassword ? "Hide password" : "Show password"}>
+                       {showDecryptPassword ? (
+                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                       ) : (
+                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                       )}
+                     </button>
+                   </div>
+                   {decryptData.error && <p style={{ color: 'var(--error)', fontSize: '0.8rem', marginTop: '8px' }}>Incorrect password. Please try again.</p>}
+                   <button className="qr-action-btn primary" style={{ width: '100%', marginTop: '20px', justifyContent: 'center' }} onClick={attemptDecrypt}>
+                     Decrypt Message
+                   </button>
+                 </div>
+               )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Toasts ── */}
