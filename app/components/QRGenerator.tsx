@@ -6,6 +6,7 @@ import React, {
 import QRCode from 'qrcode';
 import QRHistory, { HistoryItem } from './QRHistory';
 import QRScanner from './QRScanner';
+import QRBatch from './QRBatch';
 import ParticleBackground from './ParticleBackground';
 
 // ── Types ────────────────────────────────────────────────────
@@ -176,6 +177,7 @@ export default function QRGenerator() {
   const [showHistory, setShowHistory] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showBatch, setShowBatch] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
@@ -648,6 +650,14 @@ export default function QRGenerator() {
             </div>
           </div>
           <div className="qr-header-actions">
+            <button id="batch-toggle-btn" className="icon-btn" onClick={() => setShowBatch(true)} title="Batch Generator" aria-label="Open Batch QR Generator">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              </svg>
+            </button>
             <button id="scanner-toggle-btn" className="icon-btn" onClick={() => setShowScanner(true)} title="Scan QR Code" aria-label="Open QR Scanner">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 7V4h3" /><path d="M20 7V4h-3" />
@@ -923,6 +933,11 @@ export default function QRGenerator() {
       {/* ── QR Scanner Modal ── */}
       {showScanner && (
         <QRScanner onClose={() => setShowScanner(false)} />
+      )}
+
+      {/* ── QR Batch Modal ── */}
+      {showBatch && (
+        <QRBatch onClose={() => setShowBatch(false)} options={options} />
       )}
 
       {/* ── Toasts ── */}
